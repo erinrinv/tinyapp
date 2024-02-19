@@ -32,9 +32,22 @@ app.get("/urls/new", (req, res) => {
 });
 
 // POST Route
+
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  console.log("longURL", longURL);
+  res.redirect(longURL);
+});
+
+
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  //console.log(req.body); // Log the POST request body to the console
+  const longURL = req.body.longURL
+  urlDatabase[shortURL]= longURL
+  console.log(urlDatabase);
+  res.redirect(`/urls/${shortURL}`); 
 });
 
 
