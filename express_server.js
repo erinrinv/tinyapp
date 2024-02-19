@@ -40,6 +40,13 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.post('/urls/:shortURL/delete', (req, res) => {
+  console.log("DELETE ROUTE");
+  console.log(req.params.shortURL);
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+})
+
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
