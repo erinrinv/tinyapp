@@ -1,3 +1,16 @@
+// Generate a Random Short URL ID
+function generateRandomString() {
+  const alphaNumerical = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 7; i++) {
+  result += alphaNumerical.charAt(Math.floor(Math.random() * alphaNumerical.length));
+  }
+  return result;
+}
+
+
+
+
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
