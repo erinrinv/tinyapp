@@ -33,6 +33,12 @@ app.get("/urls/new", (req, res) => {
 
 // POST Route
 
+app.post('/urls/:id', (req, res) => {
+  let longURL = req.body.longURL
+  urlDatabase[req.params.id] = longURL;
+  res.redirect('/urls');
+})
+
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
