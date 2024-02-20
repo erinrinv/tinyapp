@@ -34,7 +34,8 @@ app.get("/urls/new", (req, res) => {
 // POST Route
 
 app.post('/login', (req, res) => {
-  let templateVars = {user: users[req.cookies['user_id']]};
+  const username = req.body.username;
+  res.cookie('username', username);
   res.redirect('/urls');
 });
 
