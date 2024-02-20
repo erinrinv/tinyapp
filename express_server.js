@@ -33,6 +33,14 @@ app.get("/urls/new", (req, res) => {
 
 // POST Route
 
+app.get('/login', (req, res) => {
+  let templateVars = {user: users[req.cookies['user_id']]};
+  res.render('urls_login', templateVars);
+});
+
+
+
+
 app.post('/urls/:id', (req, res) => {
   let longURL = req.body.longURL
   urlDatabase[req.params.id] = longURL;
