@@ -45,7 +45,7 @@ app.post("/logout", (req, res) => {
 
 app.post('/login', (req, res) => {
   const templateVars = { 
-    username: req.cookies["username"]};
+    username: res.cookies["username"]};
     res.render("urls_login",templateVars);
 });
 
