@@ -14,6 +14,7 @@ function generateRandomString() {
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const cookieParser = require('cookie-parser')
 
 app.use(cookieParser());
 
@@ -35,6 +36,12 @@ app.get("/urls/new", (req, res) => {
 });
 
 // POST Route
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect("/urls");
+})
+
 
 app.post('/login', (req, res) => {
   const templateVars = { 
