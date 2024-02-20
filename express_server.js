@@ -15,6 +15,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+app.use(cookieParser());
+
+
 app.set("view engine", "ejs");
 //POST Requests
 app.use(express.urlencoded({ extended: true }));
