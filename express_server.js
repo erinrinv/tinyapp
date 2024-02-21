@@ -43,6 +43,19 @@ const urlDatabase = {
 };
 
 
+// Helper Function:
+
+// Helper function to find a user by email
+function getUserByEmail(email) {
+  for (const userId in users) {
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  return null; 
+}
+
+
 
 // GET Route  new URL
 app.get("/urls/new", (req, res) => {
@@ -73,9 +86,19 @@ app.get("/register", (req, res) => {
   res.render("/register",templateVars);
 });
 
-// Create new ID for user and put into user database
 app.post('/register', (req, res) => {
   const { email, password } = req.body;
+
+  // Check if email or password are empty strings
+  if (!email || !password) {
+    return res.status(400).send("Email and password are required.");
+  }
+
+  // Check if email is already in use
+  const existingUser = getUserByEmail(email);
+  if (existingUser) {
+    return res.status(400).send("Email already exists.");
+  }
 
   const userId = generateRandomId();
 
@@ -86,6 +109,7 @@ app.post('/register', (req, res) => {
     password
   };
 
+  // Add user to global users object
   users[userId] = newUser;
 
   // Set user_id cookie containing the user's ID
