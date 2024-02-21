@@ -122,6 +122,44 @@ app.post('/register', (req, res) => {
 
 
 
+app.post('/login', (req, res) => {
+  const templateVars = { 
+    user: req.cookies[users]};
+    res.render("urls_index",templateVars);
+});
+
+
+app.post("/login",(req, res) => {
+
+  const emailIn = req.body.email;
+  const passwordIn = req.body.password;
+
+  
+
+  if (!existingEmail(emailIn) || !existingPassword(passwordIn)) {
+    
+    res.status(403).send("Error!: email or password wrong");
+  } else {
+    const foundUser = findUserByEmail(emailIn,users);
+    if (foundUser) {
+      req.session.user_id = foundUser.id;
+      res.redirect("/urls");
+    }
+  }
+});
+
+app.get("/logout",(req, res) => {
+  
+  req.session = null;
+  res.redirect("/urls");
+});
+
+
+
+
+
+
+
 app.post('/urls/:id', (req, res) => {
   let longURL = req.body.longURL
   urlDatabase[req.params.id] = longURL;
