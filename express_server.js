@@ -52,7 +52,7 @@ function getUserByEmail(email) {
       return users[userId];
     }
   }
-  return null; 
+  return false; 
 }
 
 
@@ -100,7 +100,7 @@ app.post('/register', (req, res) => {
     return res.status(400).send("Email already exists.");
   }
 
-  const userId = generateRandomId();
+  const userId = generateRandomString();
 
   // Create user object
   const newUser = {
@@ -118,8 +118,6 @@ app.post('/register', (req, res) => {
   // Redirect user to /urls page
   res.redirect('/urls');
 
-  // Testing
-  //console.log(users);
 });
 
 
