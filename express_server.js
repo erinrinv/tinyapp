@@ -79,11 +79,9 @@ app.post('/login', (req, res) => {
 
 
 //register form 
-app.get("/register", (req, res) => {
-  const templateVars = { 
-  username: req.cookies["username"]
-  };
-  res.render("/register",templateVars);
+app.get("/register",(req, res) => {
+  const templateVars = { user: null };
+  res.render("register", templateVars);
 });
 
 app.post('/register', (req, res) => {
