@@ -77,6 +77,7 @@ app.post("/logout", (req, res) => {
 app.get("/register",(req, res) => {
   const templateVars = { user: null };
   res.render("register", templateVars);
+  res.redirect("/urls");
 });
 
 app.post('/register', (req, res) => {
@@ -124,6 +125,7 @@ app.post('/login', (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login');
+  res.redirect("/urls");
 });
 
 
@@ -180,14 +182,20 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 
 app.post("/urls", (req, res) => {
+  const longURL = req.body.longURL;
   const shortURL = generateRandomString();
-  //console.log(req.body); // Log the POST request body to the console
-  const longURL = req.body.longURL
-  urlDatabase[shortURL]= longURL
-  //console.log(urlDatabase);
-  res.redirect(`/urls/${shortURL}`); 
-});
 
+  if (req.session.user_id) {
+    urlDatabase[shortURL] = {
+      longURL:longURL,
+      userID:req.session.user_id
+    };
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(401).send("Please log in");
+  }
+
+});
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL:urlDatabase[req.params.id]};
