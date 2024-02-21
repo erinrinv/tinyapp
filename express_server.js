@@ -71,11 +71,6 @@ app.post("/logout", (req, res) => {
 })
 
 
-app.post('/login', (req, res) => {
-  const templateVars = { 
-    user: req.cookies[users]};
-    res.render("urls_index",templateVars);
-});
 
 
 //register form 
