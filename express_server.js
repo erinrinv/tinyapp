@@ -38,18 +38,30 @@ const users = {
 
 // URL Database
 const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "userRandomID"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "userRandomID"
+  }
+};
+
+
+/* const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-
+ */
 
 // Helper Function:
 
 // Helper function to find a user by email
 function getUserByEmail(email) {
-  for (const userId in users) {
-    if (users[userId].email === email) {
-      return users[userId];
+  for (const userID in users) {
+    if (users[userID].email === email) {
+      return users[userID];
     }
   }
   return false; 
@@ -94,20 +106,31 @@ app.post('/register', (req, res) => {
     return res.status(400).send("Email already exists.");
   }
 
-  const userId = generateRandomString();
+  const urlsForUser = (id) => {
+    let userUrls = {};
+    for (let url in urlDatabase) {
+      if (urlDatabase[url].userID === id) {
+        userUrls[url] = urlDatabase[url];
+      }
+    }
+    return userUrls;
+  };
+
+
+  const userID = generateRandomString();
 
   // Create user object
   const newUser = {
-    id: userId,
+    id: userID,
     email,
     password
   };
 
   // Add user to global users object
-  users[userId] = newUser;
+  users[userID] = newUser;
 
   // Set user_id cookie containing the user's ID
-  res.cookie('user_id', userId);
+  res.cookie('user_id', userID);
 
   // Redirect user to /urls page
   res.redirect('/urls');
@@ -167,11 +190,25 @@ app.post('/urls/:id', (req, res) => {
 })
 
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  console.log("longURL", longURL);
-  res.redirect(longURL);
+app.get("/urls/:shortURL", (req, res) => {
+  const usersId = req.session.user_id;
+  if (!usersId) {
+    res.status(400).send("Error: Please log in!");
+    return;
+  }
+  const shortURL = req.params.shortURL;
+
+  if (urlDatabase[shortURL].userID !== usersId) {
+    res.status(400).send("Error: Url does not belong to you!");
+    return;
+  }
+
+  const templateVars = { shortURL: shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.session.user_id , user: users[usersId] };
+
+  res.render("urls_show", templateVars);
 });
+
+
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   console.log("DELETE ROUTE");
@@ -203,8 +240,15 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  const usersId = req.session.user_id;
+  const userUrls = urlsForUser(usersId);
+  const templateVars = {urls: userUrls, user: users[usersId]};
+  if (!usersId) {
+    res.status(400).send("Please log in!");
+    return;
+  }
+  
+  res.render("urls_index",templateVars);
 });
 
 app.get("/", (req, res) => {
