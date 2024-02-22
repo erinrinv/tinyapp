@@ -16,13 +16,14 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <% if(user) {%>
-          <span>You are logged in as <%=user.email%></span>
-          <a class="nav-item nav-link" href="/logout">Logout</a>
-        <% } else {%>
-          <a class="nav-item nav-link" href="/login">Login</a>
+        <% if (user) { %>
+          <span class="nav-item nav-link">Looged in as: <%= user.email %>!</span>
+          <form action="/logout" method="POST">
+            <button type="submit">Log Out</button>
+        <% } else { %>
           <a class="nav-item nav-link" href="/register">Register</a>
-        <% } %> 
+          <a class="nav-item nav-link" href="/login">Login</a>
+        <% } %>
       </div>
     </div>
   </nav>
