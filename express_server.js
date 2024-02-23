@@ -2,13 +2,20 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require('cookie-parser')
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
-app.use(cookieParser());
+//app.use(cookieParser());
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["TinyApp"],
 
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  })
+);
 
 const urlDatabase = {
   b6UTxQ: {
@@ -58,12 +65,12 @@ function getUserByEmail(email) {
 
 
 app.get('/login', (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = {
     user:user};
 
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
       return res.redirect('/urls');
     }
 
@@ -81,7 +88,7 @@ app.post("/login", (req, res) => {
   else{
     // Compare the password with the existing user's password
   if (bcrypt.compareSync(password, user.password)) {
-    res.cookie('user_id', user.id);
+    res.session.user_id = user.id;
     res.redirect('/urls');
     
   }
@@ -93,23 +100,18 @@ app.post("/login", (req, res) => {
 
 // Need to test
 app.post("/logout", (req, res) => {
-  // Clear the username cookie
-  //res.clearCookie("username");
-  //const userId = req.cookies.user_id;
-  //const user = users[userId];
-  res.clearCookie('user_id');
-  //req.session = null;
+  req.session = null;
   res.redirect("/login");
 });
 
 
 app.get('/register', (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = {
     user:user};
 
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
       return res.redirect('/urls');
     }
   
@@ -142,7 +144,7 @@ app.post('/register', (req, res) => {
   };
 
   users[userId] = newUser;
-  res.cookie('user_id', userId);
+  req.session.user_id = userId;
   res.redirect('/urls');
 
   
@@ -155,12 +157,12 @@ app.post('/register', (req, res) => {
 
 // GET Route 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = {
     user:user};
   
-    if (!req.cookies.user_id) {
+    if (!req.session.user_id) {
       return res.redirect('/login');
     }
   res.render("urls_new",templateVars);
@@ -201,7 +203,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.id;
-  if (urlDatabase[shortURL].userID !== req.cookies.user_id) {
+  if (urlDatabase[shortURL].userID !== req.session.user_id) {
     return res.status(403).send("<h1>403 Forbidden</h1><p>You are not authorized to delete this URL.</p>");
   }
   else{
@@ -226,13 +228,13 @@ app.post("/urls", (req, res) => {
   const longURL = req.body.longURL
   urlDatabase[shortURL]= longURL
   
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(403).send("<p>You must be logged in to create a new URL.</p>");
   }
   else{
   urlDatabase[shortURL] = {
       longURL: req.body.longURL,
-      userID: req.cookies.user_id
+      userID: req.session.user_id
       
     };
     res.redirect(`/urls/${shortURL}`); 
@@ -244,14 +246,14 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const shortURL = req.params.id;
   const user = users[userId];
 // Check if the URL exists in the database
   if (!urlDatabase[shortURL]) {
     return res.status(404).send("<h1>404 Not Found</h1><p>The requested URL does not exist.</p>");
   }
-  if (urlDatabase[shortURL].userID !== req.cookies.user_id) {
+  if (urlDatabase[shortURL].userID !== req.session.user_id) {
     return res.status(403).send("<h1>403 Forbidden</h1><p>You are not authorized to access this URL.</p>");
   }
   
@@ -262,11 +264,11 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const userURLs = {};
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
  // Checks URLs associated with the logged-in user
   for (const id in urlDatabase) {
-    if (urlDatabase[id].userID === req.cookies.user_id) {
+    if (urlDatabase[id].userID === req.session.user_id) {
       userURLs[id] = urlDatabase[id];
     }
   }
