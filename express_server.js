@@ -4,6 +4,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const { getUserByEmail } = require("./helpers"); 
 
 //app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -53,15 +54,6 @@ function generateRandomString() {
   return result;
 }
 
-// Helper function to find a user by email
-function getUserByEmail(email) {
-  for (const userID in users) {
-    if (users[userID].email === email) {
-      return users[userID];
-    }
-  }
-  return false; 
-}
 
 
 app.get('/login', (req, res) => {
@@ -80,14 +72,14 @@ app.get('/login', (req, res) => {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email,users);
   // Check if a user with the provided email exists
   if (!user) {
     return res.status(403).send("Email not found");
   }
   else{
     // Compare the password with the existing user's password
-  if (bcrypt.compareSync(password, user.password)) {
+  if (user.password !== password) {
     req.session.user_id = user.id;
     res.redirect('/urls');
     
@@ -144,7 +136,7 @@ app.post('/register', (req, res) => {
   };
 
   users[userId] = newUser;
-  res.session.user_id = userId;
+  req.session.user_id = userId;
   res.redirect('/urls');
 
   
