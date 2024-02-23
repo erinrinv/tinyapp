@@ -88,7 +88,7 @@ app.post("/login", (req, res) => {
   else{
     // Compare the password with the existing user's password
   if (bcrypt.compareSync(password, user.password)) {
-    res.session.user_id = user.id;
+    req.session.user_id = user.id;
     res.redirect('/urls');
     
   }
@@ -144,7 +144,7 @@ app.post('/register', (req, res) => {
   };
 
   users[userId] = newUser;
-  req.session.user_id = userId;
+  res.session.user_id = userId;
   res.redirect('/urls');
 
   
@@ -171,8 +171,7 @@ app.get("/urls/new", (req, res) => {
 // POST Route
 
 app.post('/urls/:id', (req, res) => {
-  //let longURL = req.body.longURL
-  //urlDatabase[req.params.id] = longURL;
+  
   const shortURL = req.params.id;
 
   if(!urlDatabase[shortURL]){
@@ -202,13 +201,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const shortURL = req.params.id;
+
   if (urlDatabase[shortURL].userID !== req.session.user_id) {
     return res.status(403).send("<h1>403 Forbidden</h1><p>You are not authorized to delete this URL.</p>");
   }
   else{
+    const shortURL = req.params.id;
     console.log(urlDatabase[req.params.shortURL].userID);
-  if (urlDatabase[req.params.shortURL].userID === req.session["userID"]) {
+  if (urlDatabase[shortURL].userID === req.session["userID"]) {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls");
   } else {
