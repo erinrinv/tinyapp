@@ -6,9 +6,12 @@ const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const { getUserByEmail } = require("./helpers"); 
 
+
+
 //app.use(cookieParser());
 app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended:false}));
+app.use(express.json());
 app.use(
   cookieSession({
     name: "session",
@@ -32,14 +35,14 @@ const urlDatabase = {
 
 const users = {
   userRandomID: {
-    id: "aJ48lW",
+    id: "user1Random",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
-  user2RandomID: {
-    id: "user2RandomID",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("funk", 10),
   },
 };
 
@@ -53,6 +56,15 @@ function generateRandomString() {
   }
   return result;
 }
+
+const checkIfUserIdInData = function(req ,res) {
+  const shortURL = req.params.shortURL;
+  const userid = req.session.user_id;
+  if (userid !== urlDatabase[shortURL].userID) {
+    res.status(400).send("Error: You cannot delete this");
+    return;
+  }
+};
 
 
 
@@ -79,12 +91,15 @@ app.post("/login", (req, res) => {
   }
   else{
     // Compare the password with the existing user's password
-  if (user.password !== password) {
+  if (bcrypt.compareSync(password, user.password)) {
+    
     req.session.user_id = user.id;
+    
     res.redirect('/urls');
     
   }
   else{
+    
     return res.status(403).send("Incorrect password");
   }
   };
@@ -141,8 +156,7 @@ app.post('/register', (req, res) => {
 
   
   }
-//testing
-//console.log(users);
+
 });
 
 
@@ -162,31 +176,20 @@ app.get("/urls/new", (req, res) => {
 
 // POST Route
 
-app.post('/urls/:id', (req, res) => {
-  
-  const shortURL = req.params.id;
 
-  if(!urlDatabase[shortURL]){
-    return res.status(404).send("<h1>404 Not Found</h1><p>The requested URL does not exist.</p>");
-  }
-  else{
-    if (urlDatabase[req.params.id].userID === req.session["userID"]) {
-      let longURL = req.body.longURL;
-      urlDatabase[req.params.id].longURL = longURL;
-      res.redirect('/urls');
-    }
-    else{
-      res.status(403).send("Access not allowed");
-    }
-  }
-  //res.redirect('/urls');
+
+app.post("/urls/:shortURL",(req, res) =>{
+  const shortURL = req.params.shortURL;
+  checkIfUserIdInData(req,res);
+  urlDatabase[shortURL].longURL = req.body.longURL;
+  res.redirect(`/urls`);
 });
 
 
+
+
 app.get("/u/:shortURL", (req, res) => {
-  //const longURL = urlDatabase[req.params.shortURL];
-  //console.log("longURL", longURL);
-  //res.redirect(longURL);
+ 
 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
@@ -194,25 +197,19 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post('/urls/:shortURL/delete', (req, res) => {
 
+  const shortURL = req.params.shortURL; // Extract shortURL from request parameters
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send("<h1>404 Not Found</h1><p>The requested URL does not exist.</p>");
+  }
+
   if (urlDatabase[shortURL].userID !== req.session.user_id) {
     return res.status(403).send("<h1>403 Forbidden</h1><p>You are not authorized to delete this URL.</p>");
   }
-  else{
-    const shortURL = req.params.id;
-    console.log(urlDatabase[req.params.shortURL].userID);
-  if (urlDatabase[shortURL].userID === req.session["userID"]) {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect("/urls");
-  } else {
-    res.status(403).send("Not allowed Access");
-  }
 
-  }
-
-  /* console.log(req.params.shortURL);
+  // Now that you've checked authorization, you can safely delete the URL
   delete urlDatabase[shortURL];
-  res.redirect('/urls'); */
-})
+  res.redirect("/urls");
+});
 
 
 app.post("/urls", (req, res) => {
@@ -257,6 +254,7 @@ app.get("/urls/:id", (req, res) => {
 app.get("/urls", (req, res) => {
   const userURLs = {};
   const userId = req.session.user_id;
+  
   const user = users[userId];
  // Checks URLs associated with the logged-in user
   for (const id in urlDatabase) {
@@ -265,10 +263,14 @@ app.get("/urls", (req, res) => {
     }
   }
 
-
+  
   const templateVars = { user: user,  urls: userURLs };
+
   res.render("urls_index", templateVars);
 });
+
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
